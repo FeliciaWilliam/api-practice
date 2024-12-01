@@ -1,10 +1,20 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	host     = "localhost"
+	port     = 8080
+	user     = ""
+	password = ""
+	db_name  = ""
 )
 
 type task struct {
@@ -21,8 +31,9 @@ type task struct {
 var tasks = []task{}
 var nextID = 1
 
-func readTasks(context *gin.Context) {
+func readTasks(context *gin.Context, db *sql.DB) {
 	context.IndentedJSON(http.StatusOK, tasks)
+	query:=``
 }
 
 func readTasksbyID(context *gin.Context) {
@@ -100,8 +111,18 @@ func deleteTasks(context *gin.Context) {
 }
 
 func main() {
+	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost/mydb?sslmode=disable")
+	if err != nil {
+		fmt.Println("Something went wrong.")
+		return
+	}
+
+	defer db.Close()
+
 	router := gin.Default()
-	router.GET("/tasks", readTasks)
+	router.GET("/tasks", func(c *gin.Context){
+		readTasks(c,db)
+	 })
 	router.POST("/tasks", createTasks)
 	router.PUT("/tasks", updateTasks)
 	router.DELETE("/tasks", deleteTasks)
